@@ -122,7 +122,7 @@
     <div class="labels" id="label-container"></div>
   </div>
 
-  <!-- Audio files with increased click volume -->
+  <!-- Audio files -->
   <audio id="clickSound" src="sounds/mixkit-arcade-game-jump-coin-216.wav" volume="1.0"></audio>
   <audio id="successSound" src="sounds/mixkit-fantasy-game-success-notification-270.wav"></audio>
 
@@ -168,7 +168,6 @@
       let highest = 0;
       let highlightIndex = 0;
 
-      // Find highest probability
       for (let i = 0; i < prediction.length; i++) {
         if (prediction[i].probability > highest) {
           highest = prediction[i].probability;
@@ -186,12 +185,10 @@
         name.innerText = p.className;
         percent.innerText = prob + '%';
 
-        // Set bar color
         if (p.probability > 0.7) bar.style.background = '#e74c3c';
         else if (p.probability > 0.4) bar.style.background = '#f1c40f';
         else bar.style.background = '#2ecc71';
 
-        // Animate width
         bar.style.width = '0%';
         let width = 0;
         const target = prob;
@@ -200,7 +197,6 @@
           else { width += 1; bar.style.width = width + '%'; }
         }, 10);
 
-        // Apply glow based on color for highest probability
         bar.classList.remove('glow-red', 'glow-yellow', 'glow-green');
         if (i === highlightIndex) {
           if (p.probability > 0.7) bar.classList.add('glow-red');
@@ -210,11 +206,13 @@
       }
     }
 
-    imageUpload.addEventListener('change', (ev) => {
-      // Boost click volume
+    // Play click sound when "Choose File" button is clicked
+    imageUpload.addEventListener('mousedown', () => {
       clickSound.volume = 1.0;
       clickSound.play();
+    });
 
+    imageUpload.addEventListener('change', (ev) => {
       const file = ev.target.files[0];
       if (!file) return;
 
