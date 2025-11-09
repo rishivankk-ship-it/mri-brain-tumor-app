@@ -5,12 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MRI Brain Tumor Identifier</title>
 
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Roboto', sans-serif;
       background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
@@ -31,17 +29,8 @@
       text-align: center;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 15px;
-      color: #333;
-    }
-
-    p {
-      font-size: 1rem;
-      margin-bottom: 20px;
-      color: #555;
-    }
+    h1 { font-size: 2rem; margin-bottom: 15px; color: #333; }
+    p { font-size: 1rem; margin-bottom: 20px; color: #555; }
 
     input[type="file"] {
       padding: 10px 15px;
@@ -53,9 +42,7 @@
       background: #f0f8ff;
     }
 
-    input[type="file"]:hover {
-      background: #e6f0ff;
-    }
+    input[type="file"]:hover { background: #e6f0ff; }
 
     #previewImage {
       margin-top: 20px;
@@ -88,34 +75,17 @@
       transition: width 0.5s ease;
     }
 
-    .label-name {
-      font-weight: 600;
-      margin-right: 10px;
-    }
+    .label-name { font-weight: 600; margin-right: 10px; }
 
     canvas { display: none; }
 
-    /* Responsive styles for mobile */
     @media (max-width: 600px) {
-      .container {
-        padding: 20px;
-      }
-      h1 {
-        font-size: 1.5rem;
-      }
-      p {
-        font-size: 0.9rem;
-      }
-      .label {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .label-name {
-        margin-bottom: 4px;
-      }
-      .bar-container {
-        width: 100%;
-      }
+      .container { padding: 20px; }
+      h1 { font-size: 1.5rem; }
+      p { font-size: 0.9rem; }
+      .label { flex-direction: column; align-items: flex-start; }
+      .label-name { margin-bottom: 4px; }
+      .bar-container { width: 100%; }
     }
   </style>
 </head>
@@ -132,6 +102,10 @@
     <div class="labels" id="label-container"></div>
   </div>
 
+  <!-- Audio files -->
+  <audio id="clickSound" src="sounds/click.mp3"></audio>
+  <audio id="successSound" src="sounds/success.mp3"></audio>
+
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 
@@ -145,13 +119,15 @@
     const ctx = canvas.getContext('2d');
     const labelContainer = document.getElementById('label-container');
 
+    const clickSound = document.getElementById('clickSound');
+    const successSound = document.getElementById('successSound');
+
     async function init() {
       const modelURL = MODEL_URL + 'model.json';
       const metadataURL = MODEL_URL + 'metadata.json';
       model = await tmImage.load(modelURL, metadataURL);
       maxPredictions = model.getTotalClasses();
 
-      // Create label bars
       labelContainer.innerHTML = '';
       for (let i = 0; i < maxPredictions; i++) {
         const div = document.createElement('div');
@@ -182,35 +158,29 @@
         name.innerText = p.className;
         percent.innerText = prob + '%';
 
-        // Set color based on probability
-        if (p.probability > 0.7) bar.style.background = '#e74c3c';       // Red
-        else if (p.probability > 0.4) bar.style.background = '#f1c40f';  // Yellow
-        else bar.style.background = '#2ecc71';                            // Green
+        if (p.probability > 0.7) bar.style.background = '#e74c3c';
+        else if (p.probability > 0.4) bar.style.background = '#f1c40f';
+        else bar.style.background = '#2ecc71';
 
-        // Animate bar from 0 to probability
         bar.style.width = '0%';
         let width = 0;
         const target = prob;
         const interval = setInterval(() => {
           if (width >= target) clearInterval(interval);
-          else {
-            width += 1;
-            bar.style.width = width + '%';
-          }
+          else { width += 1; bar.style.width = width + '%'; }
         }, 10);
       }
 
-      // Highlight highest probability bar
+      // Highlight highest probability
       for (let i = 0; i < prediction.length; i++) {
         document.getElementById(`bar-${i}`).style.border = i === highlightIndex ? '2px solid #000' : 'none';
-        if (prediction[i].probability > highest) {
-          highest = prediction[i].probability;
-          highlightIndex = i;
-        }
+        if (prediction[i].probability > highest) { highest = prediction[i].probability; highlightIndex = i; }
       }
     }
 
     imageUpload.addEventListener('change', (ev) => {
+      clickSound.play(); // play click sound
+
       const file = ev.target.files[0];
       if (!file) return;
 
@@ -223,6 +193,7 @@
         ctx.drawImage(img, 0, 0);
 
         await predict(canvas);
+        successSound.play(); // play success sound when prediction finishes
       };
       img.src = URL.createObjectURL(file);
     });
