@@ -87,6 +87,17 @@
       .label-name { margin-bottom: 4px; }
       .bar-container { width: 100%; }
     }
+
+    /* Glowing bar animation */
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px rgba(0,0,0,0.3); }
+      50% { box-shadow: 0 0 12px rgba(0,0,0,0.7); }
+      100% { box-shadow: 0 0 5px rgba(0,0,0,0.3); }
+    }
+
+    .glow {
+      animation: glow 1s infinite;
+    }
   </style>
 </head>
 
@@ -148,6 +159,14 @@
       let highest = 0;
       let highlightIndex = 0;
 
+      // Find the highest probability
+      for (let i = 0; i < prediction.length; i++) {
+        if (prediction[i].probability > highest) {
+          highest = prediction[i].probability;
+          highlightIndex = i;
+        }
+      }
+
       for (let i = 0; i < prediction.length; i++) {
         const p = prediction[i];
         const bar = document.getElementById(`bar-${i}`);
@@ -158,10 +177,12 @@
         name.innerText = p.className;
         percent.innerText = prob + '%';
 
-        if (p.probability > 0.7) bar.style.background = '#e74c3c';    // Red
-        else if (p.probability > 0.4) bar.style.background = '#f1c40f'; // Yellow
-        else bar.style.background = '#2ecc71';                          // Green
+        // Set bar color
+        if (p.probability > 0.7) bar.style.background = '#e74c3c';
+        else if (p.probability > 0.4) bar.style.background = '#f1c40f';
+        else bar.style.background = '#2ecc71';
 
+        // Animate width
         bar.style.width = '0%';
         let width = 0;
         const target = prob;
@@ -169,17 +190,15 @@
           if (width >= target) clearInterval(interval);
           else { width += 1; bar.style.width = width + '%'; }
         }, 10);
-      }
 
-      // Highlight highest probability
-      for (let i = 0; i < prediction.length; i++) {
-        document.getElementById(`bar-${i}`).style.border = i === highlightIndex ? '2px solid #000' : 'none';
-        if (prediction[i].probability > highest) { highest = prediction[i].probability; highlightIndex = i; }
+        // Add glow effect to highest bar
+        if (i === highlightIndex) bar.classList.add('glow');
+        else bar.classList.remove('glow');
       }
     }
 
     imageUpload.addEventListener('change', (ev) => {
-      clickSound.play(); // play click sound
+      clickSound.play(); // click sound
 
       const file = ev.target.files[0];
       if (!file) return;
@@ -193,7 +212,7 @@
         ctx.drawImage(img, 0, 0);
 
         await predict(canvas);
-        successSound.play(); // play success sound when prediction finishes
+        successSound.play(); // success sound
       };
       img.src = URL.createObjectURL(file);
     });
