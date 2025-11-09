@@ -88,16 +88,25 @@
       .bar-container { width: 100%; }
     }
 
-    /* Glowing bar animation */
-    @keyframes glow {
-      0% { box-shadow: 0 0 5px rgba(0,0,0,0.3); }
-      50% { box-shadow: 0 0 12px rgba(0,0,0,0.7); }
-      100% { box-shadow: 0 0 5px rgba(0,0,0,0.3); }
+    /* Glowing bar animations by color */
+    @keyframes glow-red {
+      0% { box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); }
+      50% { box-shadow: 0 0 15px rgba(231, 76, 60, 1); }
+      100% { box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); }
     }
-
-    .glow {
-      animation: glow 1s infinite;
+    @keyframes glow-yellow {
+      0% { box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
+      50% { box-shadow: 0 0 15px rgba(241, 196, 15, 1); }
+      100% { box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
     }
+    @keyframes glow-green {
+      0% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.5); }
+      50% { box-shadow: 0 0 15px rgba(46, 204, 113, 1); }
+      100% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.5); }
+    }
+    .glow-red { animation: glow-red 1s infinite; }
+    .glow-yellow { animation: glow-yellow 1s infinite; }
+    .glow-green { animation: glow-green 1s infinite; }
   </style>
 </head>
 
@@ -113,8 +122,8 @@
     <div class="labels" id="label-container"></div>
   </div>
 
-  <!-- Audio files -->
-  <audio id="clickSound" src="sounds/mixkit-arcade-game-jump-coin-216.wav"></audio>
+  <!-- Audio files with increased click volume -->
+  <audio id="clickSound" src="sounds/mixkit-arcade-game-jump-coin-216.wav" volume="1.0"></audio>
   <audio id="successSound" src="sounds/mixkit-fantasy-game-success-notification-270.wav"></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
@@ -159,7 +168,7 @@
       let highest = 0;
       let highlightIndex = 0;
 
-      // Find the highest probability
+      // Find highest probability
       for (let i = 0; i < prediction.length; i++) {
         if (prediction[i].probability > highest) {
           highest = prediction[i].probability;
@@ -191,14 +200,20 @@
           else { width += 1; bar.style.width = width + '%'; }
         }, 10);
 
-        // Add glow effect to highest bar
-        if (i === highlightIndex) bar.classList.add('glow');
-        else bar.classList.remove('glow');
+        // Apply glow based on color for highest probability
+        bar.classList.remove('glow-red', 'glow-yellow', 'glow-green');
+        if (i === highlightIndex) {
+          if (p.probability > 0.7) bar.classList.add('glow-red');
+          else if (p.probability > 0.4) bar.classList.add('glow-yellow');
+          else bar.classList.add('glow-green');
+        }
       }
     }
 
     imageUpload.addEventListener('change', (ev) => {
-      clickSound.play(); // click sound
+      // Boost click volume
+      clickSound.volume = 1.0;
+      clickSound.play();
 
       const file = ev.target.files[0];
       if (!file) return;
@@ -212,7 +227,7 @@
         ctx.drawImage(img, 0, 0);
 
         await predict(canvas);
-        successSound.play(); // success sound
+        successSound.play();
       };
       img.src = URL.createObjectURL(file);
     });
