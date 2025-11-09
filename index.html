@@ -103,8 +103,8 @@
   </div>
 
   <!-- Audio files -->
-  <audio id="clickSound" src="sounds/click.mp3"></audio>
-  <audio id="successSound" src="sounds/success.mp3"></audio>
+  <audio id="clickSound" src="sounds/mixkit-arcade-game-jump-coin-216.wav"></audio>
+  <audio id="successSound" src="sounds/mixkit-fantasy-game-success-notification-270.wav"></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
@@ -158,9 +158,9 @@
         name.innerText = p.className;
         percent.innerText = prob + '%';
 
-        if (p.probability > 0.7) bar.style.background = '#e74c3c';
-        else if (p.probability > 0.4) bar.style.background = '#f1c40f';
-        else bar.style.background = '#2ecc71';
+        if (p.probability > 0.7) bar.style.background = '#e74c3c';    // Red
+        else if (p.probability > 0.4) bar.style.background = '#f1c40f'; // Yellow
+        else bar.style.background = '#2ecc71';                          // Green
 
         bar.style.width = '0%';
         let width = 0;
