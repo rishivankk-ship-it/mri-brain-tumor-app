@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MRI Brain Tumor Identifier</title>
+  <style>
+    body { font-family: system-ui,Segoe UI,Roboto,Arial; margin: 18px; }
+    img, canvas { max-width: 480px; width: 100%; border-radius: 8px; margin-top: 12px; }
+    .labels { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .label { padding: 6px 8px; border-radius: 6px; background: #f3f3f3; }
+  </style>
+</head>
+<body>
+  <h1>MRI Brain Tumor Identifier</h1>
+  <p>Upload an MRI image (JPG/PNG). The model will predict the type of brain tumor.</p>
+
+  <input type="file" id="imageUpload" accept="image/*">
+  <br>
+  <img id="previewImage" src="" alt="Uploaded MRI">
+  <canvas id="canvas" width="480" height="480" style="display:none;"></canvas>
+  <div class="labels" id="label-container"></div>
+
+  <!-- TensorFlow.js and Teachable Machine helpers -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+  <script>
+    const MODEL_URL = 'tm-my-image-model/'; // <-- your extracted Teachable Machine folder
+    let model, maxPredictions;
+
+    const imageUpload = document.getElementById('imageUpload');
+    const previewImage = document.getElementById('previewImage');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const labelContainer = document.getElementById('label-container');
+
+    // Load the model
+    async function init() {
+      const modelURL = MODEL_URL + 'model.json';
+      const metadataURL = MODEL_URL + 'metadata.json';
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+
+      // create label elements
+      labelContainer.innerHTML = '';
+      for (let i = 0; i < maxPredictions; i++) {
+        const div = document.createElement('div');
+        div.className = 'label';
+        div.id = 'label-' + i;
+        div.innerText = '...';
+        labelContainer.appendChild(div);
+      }
+    }
+
+    // Predict function
+    async function predict(imageSource) {
+      const prediction = await model.predict(imageSource, false);
+      for (let i = 0; i < prediction.length; i++) {
+        const p = prediction[i];
+        const el = document.getElementById('label-' + i);
+        el.innerText = `${p.className}: ${(p.probability * 100).toFixed(1)}%`;
+      }
+    }
+
+    // Handle image upload
+    imageUpload.addEventListener('change', (ev) => {
+      const file = ev.target.files[0];
+      if (!file) return;
+      const img = new Image();
+      img.onload = async () => {
+        // Show image on the page
+        previewImage.src = img.src;
+
+        // Draw image to canvas for prediction
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        // Run prediction
+        await predict(canvas);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+
+    init().catch(err => {
+      console.error(err);
+      alert('Failed to load model. Make sure MODEL_URL is set and the files are served over HTTP(S).');
+    });
+  </script>
+</body>
+</html>
